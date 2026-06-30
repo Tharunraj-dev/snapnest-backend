@@ -1,0 +1,67 @@
+import jwt from "jsonwebtoken";
+import User from "./../models/user.model.js";
+
+export const Login = async (req, res) => {
+  try {
+    const { userName, password, rememberme } = req.body;
+    const user = await User.findOne({
+      $or: [{ userName }, { email: userName }],
+    });
+    if (!user) return res.status(404).json({ message: "Invalid Username" });
+    const isValidPassword = bcrypt.compare(password, user.password);
+    if (!isValidPassword)
+      return res.status(401).json({ message: "Invalid username or password" });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET_KEY, {
+      expiresIn: rememberMe ? "7d" : "3h",
+    });
+    res.cookie("token", token, {
+      httpOnly: true,
+      signed: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "protection",
+      maxAge: rememberMe ? 7 * 24 * 60 * 60 * 1000 : 3 * 60 * 60 * 1000,
+    });
+    return res.status(200).json({
+      message: "Successfully received",
+      userName: user.userName,
+      email: user.email,
+      uid: user.uid,
+      profileURL:user.profileURL,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Internal Server" });
+  }
+};
+
+export const Signup = async (req, res) => {
+  try {
+    const { userName, email, password } = req.body;
+    const isExistingUser = await User.findOne({
+      "$or": [{ userName }, { email }],
+    });
+    if (isExistingUser) {
+      return res
+        .status(409)
+        .json({
+          message: `${isExistingUser.userName === userName ? "Username" : "email"} is arleady in use!`,
+        });
+    }
+    const user = await User.create({ userName, email, password });
+    res.status.json({ message: "User Created Successfully!" });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const Logout = (req, res) => {
+  res.clearCookie("token", token, {
+    httpOnly: true,
+    signed: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "protection",
+    maxAge: rememberMe ? 7 * 24 * 60 * 60 * 1000 : 3 * 60 * 60 * 1000,
+  });
+  res.status(200).json({ message: "Successfully Logged out" });
+};
