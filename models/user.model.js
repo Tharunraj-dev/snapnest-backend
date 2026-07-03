@@ -20,29 +20,33 @@ const userSchema = new mongoose.Schema(
     },
     uid: {
       type: String,
-      default:uuidv7,
+      default: uuidv7,
       require: true,
     },
-    role:{
-      type:String,
-      default:"user",
-    },
-    profileURL :{
+    role: {
       type: String,
-      default: ""
-    }
+      default: "user",
+    },
+    profileURL: {
+      type: String,
+      default: "",
+    },
+    publicId: {
+      type: String,
+      default: "",
+    },
   },
   {
     timestamps: true,
-  },
+  }
 );
 
-userSchema.pre("save", async function() {
+userSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
   let saltValue = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, saltValue);
 });
 
-const User = mongoose.model('Users',userSchema);
+const User = mongoose.model("Users", userSchema);
 
 export default User;
