@@ -19,3 +19,19 @@ export const deleteUser = async (req, res) => {
     return res.status(500).json({ message: "Internet Server Error" });
   }
 };
+
+export const getUserProfile = async (req, res) => {
+  const { userId } = req;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
+  const user = await User.findById(userId).select("-password");
+  if (!user) return res.status(404).json({ message: "User not found" });
+  res
+    .status(200)
+    .json({
+      userName: user.userName,
+      email: user.email,
+      uid: user.uid,
+      role: user.role,
+      profileURL: user.profileURL,
+    });
+};
