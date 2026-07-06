@@ -1,6 +1,6 @@
-import http from "http";
+import "dotenv/config";
 import express from "express";
-import dotenv from "dotenv";
+import http from "http";
 import cors from "cors";
 import cookie from "cookie";
 import jwt from "jsonwebtoken";
@@ -12,8 +12,8 @@ import isAuth from "./middlewares/auth.middleware.js";
 
 import authRoutes from "./routes/auth.route.js";
 import accountRoutes from "./routes/account.route.js";
+import uploadRoutes from "./routes/upload.route.js";
 
-dotenv.config();
 connectDB();
 
 const app = express();
@@ -61,7 +61,7 @@ chatsSocket.use((socket, next) => {
   );
   if (!token) return next(new Error("Unauthorized"));
   try {
-    const { id } = JsonWebTokenError.verify(token, process.env.JWT_SECRET_KEY);
+    const { id } = jwt.verify(token, process.env.JWT_SECRET_KEY);
     socket.userId = id;
   } catch (error) {
     return next(new Error("Unauthorised"));
@@ -70,6 +70,7 @@ chatsSocket.use((socket, next) => {
 
 app.use("/api/auth/", authRoutes);
 app.use("/api/account/",isAuth , accountRoutes);
+app.use("/api/upload/", isAuth, uploadRoutes);
 
 server.listen(process.env.PORT, () => {
   console.log("Running in the port");
