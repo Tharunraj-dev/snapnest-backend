@@ -9,6 +9,7 @@ import { Server } from "socket.io";
 
 import connectDB from "./config/db.js";
 import isAuth from "./middlewares/auth.middleware.js";
+import chatSocketListener from "./controller/chatSocket.controller.js";
 
 import authRoutes from "./routes/auth.route.js";
 import accountRoutes from "./routes/account.route.js";
@@ -50,10 +51,11 @@ const socket = new Server(server, {
   },
 });
 
-const chatsSocket = socket.of("/chats");
+const chatSocket = socket.of("/chats");
 
-chatsSocket.use((socket, next) => {
+chatSocket.use((socket, next) => {
   const cookies = cookie.parse(socket.handshake.headers.cookie || "");
+  cookies = cookies["token"];
   if (!cookies) return next(new Error("Unauthorised"));
   const token = cookieParser.signedCookie(
     cookies,
@@ -67,6 +69,8 @@ chatsSocket.use((socket, next) => {
     return next(new Error("Unauthorised"));
   }
 });
+
+chatSocket.on("connection", chatSocketListener(chatSocket));
 
 app.use("/api/auth/", authRoutes);
 app.use("/api/account/",isAuth , accountRoutes);

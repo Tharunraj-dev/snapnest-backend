@@ -33,5 +33,7 @@ export const getUserProfile = async (req, res) => {
       uid: user.uid,
       role: user.role,
       profileURL: user.profileURL,
+      followers: user.followers,
+      following: user.following,
     });
 };
