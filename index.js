@@ -9,11 +9,12 @@ import { Server } from "socket.io";
 
 import connectDB from "./config/db.js";
 import isAuth from "./middlewares/auth.middleware.js";
-import chatSocketListener from "./controller/chatSocket.controller.js";
+import chatSocketListener from "./sockets/chat.socket.js";
 
 import authRoutes from "./routes/auth.route.js";
 import accountRoutes from "./routes/account.route.js";
 import uploadRoutes from "./routes/upload.route.js";
+import chatRoutes from "./routes/chat.route.js";
 
 connectDB();
 
@@ -73,8 +74,9 @@ chatSocket.use((socket, next) => {
 chatSocket.on("connection", chatSocketListener(chatSocket));
 
 app.use("/api/auth/", authRoutes);
-app.use("/api/account/",isAuth , accountRoutes);
+app.use("/api/account/", isAuth, accountRoutes);
 app.use("/api/upload/", isAuth, uploadRoutes);
+app.use("/api/chats/", isAuth, chatRoutes);
 
 server.listen(process.env.PORT, () => {
   console.log("Running in the port");
