@@ -55,7 +55,7 @@ const socket = new Server(server, {
 const chatSocket = socket.of("/chats");
 
 chatSocket.use((socket, next) => {
-  const cookies = cookie.parse(socket.handshake.headers.cookie || "");
+  let cookies = cookie.parse(socket.handshake.headers.cookie || "");
   cookies = cookies["token"];
   if (!cookies) return next(new Error("Unauthorised"));
   const token = cookieParser.signedCookie(

@@ -5,18 +5,26 @@ export const getChatList = async (req, res) => {
   const { userId } = req;
   try {
     const List = await User.findById(userId).select("chatList");
-    if (List == null)
+    if (List.chatList == undefined)
       return res.status(404).json({ message: "Chat not Found!" });
-    const { chatList } = List;
-    for (let i = 0; i < chatList.length; i++) {
-      let senderInfo = await User.findOne({ uid: chatList[i].senderId });
-      chatList[i] = {
-        ...chatList[i],
-        senderName: senderInfo.userName,
-        profileURL: senderInfo.profileURL,
-      };
-    }
-    res.status(200).json(chatList);
+    let chatList = List.chatList ?? [];
+    let chatListWithInfo = await Promise.all(
+      chatList.map(async (chat) => {
+        let senderInfo = await User.findOne({ uid: chatList[i].senderId });
+        if (!senderInfo) return null;
+        return {
+          ...chat.toObject(),
+          senderName: senderInfo.userName,
+          profileURL: senderInfo.profileURL,
+        };
+      }),
+    );
+    chatListWithInfo = chatListWithInfo.filter((element) => element != null);
+    chatListWithInfo.push({
+      profileURL: "",
+      senderName: "jhvhvhv",
+    });
+    res.status(200).json(chatListWithInfo);
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Something Went Wrong!" });
