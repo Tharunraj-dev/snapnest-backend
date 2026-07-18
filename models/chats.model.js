@@ -32,6 +32,7 @@ const messageSchema = new mongoose.Schema({
 const chatSchema = new mongoose.Schema({
   chatId: {
     type: String,
+    index:true,
     default: uuidv7
   },
   chats: {

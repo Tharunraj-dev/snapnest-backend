@@ -7,7 +7,9 @@ export const Login = async (req, res) => {
     const { userName, password, rememberMe } = req.body;
     const user = await User.findOne({
       $or: [{ userName }, { email: userName }],
-    }).select("-chatList -following -followers");
+    })
+      .select("-chatList -following -followers -publicId")
+      .lean();
     if (!user)
       return res.status(404).json({ message: "Invalid username or password" });
     const isValidPassword = await bcrypt.compare(password, user.password);
@@ -49,7 +51,9 @@ export const Signup = async (req, res) => {
 
     const isExistingUser = await User.findOne({
       $or: [{ userName }, { email }],
-    }).select("userName");
+    })
+      .select("userName -_id")
+      .lean();
     if (isExistingUser) {
       return res.status(409).json({
         message: `${isExistingUser.userName === userName ? "Username" : "email"} is arleady in use!`,

@@ -7,21 +7,30 @@ const chatSocketListener = (chatSocket) => {
 
     socket.on("join_chat", async ({ chatId, senderId }) => {
       try {
-        const senderName = await User.findOne({ uid: senderId }).select(
-          "userName",
-        );
+        const senderName = await User.findOne({ uid: senderId })
+          .select("userName -_id")
+          .lean();
         if (!senderName) throw new Error("User Not Exist");
-        let chatMessages = await chats.findOne({ chatId });
+        let chatMessages = await chats
+          .findOne({ chatId })
+          .select("chatId chats")
+          .lean();
         if (!chatMessages) {
           chatMessages = await chats.create({ chats: [] });
-          const userData = await User.findByIdAndUpdate(socket.userid, {
-            $push: {
-              chatList: {
-                senderId,
-                chatId: chatMessages.chatId,
+          const userData = await User.findByIdAndUpdate(
+            socket.userid,
+            {
+              $push: {
+                chatList: {
+                  senderId,
+                  chatId: chatMessages.chatId,
+                },
               },
             },
-          });
+            { new: true },
+          )
+            .select("chats -_id")
+            .lean();
           if (!userData) throw new Error("Something Went Wrong!");
         }
         socket.chatId = chatMessages.chatId;
@@ -57,7 +66,7 @@ const chatSocketListener = (chatSocket) => {
             },
           },
           { new: true },
-        );
+        ).select("chats -_id").sort({createAt:-1}).skip(0).limit(5).lean();
         if (!message) throw new Error("Error in Sending the Message");
         socket
           .to(socket.chatId)
@@ -110,11 +119,9 @@ const chatSocketListener = (chatSocket) => {
           .emit("delete_message", { id: messageId, senderName });
       } catch (error) {
         console.log(error);
-        chatSocket
-          .to(socket.id)
-          .emit("error_message", {
-            message: error.message || "Error in Sending the Message",
-          });
+        chatSocket.to(socket.id).emit("error_message", {
+          message: error.message || "Error in Sending the Message",
+        });
       }
     });
 

@@ -23,7 +23,7 @@ export const deleteUser = async (req, res) => {
 export const getUserProfile = async (req, res) => {
   const { userId } = req;
   if (!userId) return res.status(401).json({ message: "Unauthorized" });
-  const user = await User.findById(userId).select("-password");
+  const user = await User.findById(userId).select("-_id -password -chatList -publicId").lean();
   if (!user) return res.status(404).json({ message: "User not found" });
   res
     .status(200)

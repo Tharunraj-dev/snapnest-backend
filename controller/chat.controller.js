@@ -4,25 +4,29 @@ import chats from "../models/chats.model.js";
 export const getChatList = async (req, res) => {
   const { userId } = req;
   try {
-    const List = await User.findById(userId).select("chatList");
-    if (List.chatList == undefined)
+    const List = await User.findById(userId).select("chatList").lean();
+    if (List == undefined)
       return res.status(404).json({ message: "Chat not Found!" });
     let chatList = List.chatList ?? [];
     let chatListWithInfo = await Promise.all(
       chatList.map(async (chat) => {
-        let senderInfo = await User.findOne({ uid: chatList[i].senderId });
+        let senderInfo = await User.findOne({ uid: chat.senderId })
+          .select("userName profileURL -_id")
+          .lean();
         if (!senderInfo) return null;
         return {
-          ...chat.toObject(),
-          senderName: senderInfo.userName,
-          profileURL: senderInfo.profileURL,
+          ...chat,
+          senderName: senderInfo?.userName,
+          profileURL: senderInfo?.profileURL,
         };
       }),
     );
-    chatListWithInfo = chatListWithInfo.filter((element) => element != null);
+    chatListWithInfo = chatListWithInfo.filter((element) => element !== null);
     chatListWithInfo.push({
       profileURL: "",
       senderName: "jhvhvhv",
+      senderId: "",
+      chatId: "",
     });
     res.status(200).json(chatListWithInfo);
   } catch (error) {
