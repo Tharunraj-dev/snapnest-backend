@@ -66,6 +66,7 @@ chatSocket.use((socket, next) => {
   try {
     const { id } = jwt.verify(token, process.env.JWT_SECRET_KEY);
     socket.userId = id;
+    next();
   } catch (error) {
     return next(new Error("Unauthorised"));
   }

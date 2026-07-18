@@ -3,7 +3,7 @@ import chats from "../models/chats.model.js";
 
 export const getChatList = async (req, res) => {
   const { userId } = req;
-  try {
+  try {    
     const List = await User.findById(userId).select("chatList").lean();
     if (List == undefined)
       return res.status(404).json({ message: "Chat not Found!" });
@@ -22,12 +22,6 @@ export const getChatList = async (req, res) => {
       }),
     );
     chatListWithInfo = chatListWithInfo.filter((element) => element !== null);
-    chatListWithInfo.push({
-      profileURL: "",
-      senderName: "jhvhvhv",
-      senderId: "",
-      chatId: "",
-    });
     res.status(200).json(chatListWithInfo);
   } catch (error) {
     console.log(error);

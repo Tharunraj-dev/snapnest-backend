@@ -5,7 +5,6 @@ import { v7 as uuidv7 } from "uuid";
 const chatListSchema = new mongoose.Schema({
   chatId: {
     type: String,
-    unique: true,
     required: true,
   },
   senderId: {
