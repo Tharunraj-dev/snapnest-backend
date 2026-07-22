@@ -35,22 +35,18 @@ const chatSocketListener = (chatSocket) => {
         }
         socket.chatId = chatMessages.chatId;
         socket.join(chatMessages.chatId);
-        chatSocket
-          .to(socket.id)
-          .emit("set_sender_info", {
-            name: senderName.userName,
-            chatId: chatMessages.chatId,
-          });
+        chatSocket.to(socket.id).emit("set_sender_info", {
+          name: senderName.userName,
+          chatId: chatMessages.chatId,
+        });
         chatSocket
           .to(socket.id)
           .emit("prev_chat", { chats: chatMessages.chats });
       } catch (error) {
         console.log(error);
-        chatSocket
-          .to(socket.id)
-          .emit("error_message", {
-            message: error.message || "Error in joining the Room!",
-          });
+        chatSocket.to(socket.id).emit("error_message", {
+          message: error.message || "Error in joining the Room!",
+        });
       }
     });
 
@@ -81,30 +77,28 @@ const chatSocketListener = (chatSocket) => {
           .to(socket.chatId)
           .emit("recieve_message", { id, content, senderId, timestamp });
         console.log("sent");
-        
       } catch (error) {
         console.log(error);
-        chatSocket
-          .to(socket.id)
-          .emit("error_message", {
-            message: error.message || "Error in Sending the Message!",
-          });
+        chatSocket.to(socket.id).emit("error_message", {
+          message: error.message || "Error in Sending the Message!",
+        });
       }
     });
 
     socket.on("edit_message", async ({ messageId, content }) => {
       if (!socket.chatId) return;
       try {
-        const message = await findOneAndUpdate(
-          { chatId: socket.chatId, "chats.id": messageId },
-          {
-            $set: {
-              "chats.$.content": content,
-              "chats.$.isEdited": true,
+        const message = await chats
+          .findOneAndUpdate(
+            { chatId: socket.chatId, "chats.id": messageId },
+            {
+              $set: {
+                "chats.$.content": content,
+                "chats.$.isEdited": true,
+              },
             },
-          },
-          { new: true },
-        )
+            { new: true },
+          )
           .select("chats -_id")
           .sort({ createdAt: -1 })
           .skip(0)
@@ -114,43 +108,37 @@ const chatSocketListener = (chatSocket) => {
         socket.to(socket.chatId).emit("edit_message", { messageId, content });
       } catch (error) {
         console.log(error);
-        chatSocket
-          .to(socket.id)
-          .emit("error_message", {
-            message: error.message || "Error in Editing the Message!",
-          });
+        chatSocket.to(socket.id).emit("error_message", {
+          message: error.message || "Error in Editing the Message!",
+        });
       }
     });
 
-    socket.on("delete_message", async ({ messageId, senderName }) => {
+    socket.on("delete_message", async ({ messageId, senderName, index }) => {
       if (!socket.chatId) return;
       try {
-        const message = await findOneAndUpdate(
-          { chatId: socket.chatId, "chats.id": messageId },
-          {
-            $set: {
-              "chats.$.content": "Deleted",
-              "chats.$.isDeleted": true,
+        const message = await chats
+          .findOneAndUpdate(
+            { chatId: socket.chatId, "chats.id": messageId },
+            {
+              $set: {
+                "chats.$.content": "Deleted",
+                "chats.$.isDeleted": true,
+              },
             },
-          },
-          { new: true },
-        )
+            { new: true },
+          )
           .select("chats -_id")
-          .sort({ createdAt: -1 })
-          .skip(0)
-          .limit(5)
           .lean();
         if (!message) throw new Error("Error in Deleting the Message!");
         socket
           .to(socket.chatId)
-          .emit("delete_message", { id: messageId, senderName });
+          .emit("delete_message", { id: messageId, senderName,index });
       } catch (error) {
         console.log(error);
-        chatSocket
-          .to(socket.id)
-          .emit("error_message", {
-            message: error.message || "Error in Deleting the Message!",
-          });
+        chatSocket.to(socket.id).emit("error_message", {
+          message: error.message || "Error in Deleting the Message!",
+        });
       }
     });
 
